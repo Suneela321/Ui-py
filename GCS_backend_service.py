@@ -563,9 +563,21 @@ class Bridge:
         the vehicle converging on target in the telemetry stream."""
         if not self.connected:
             raise ConnectionError("Not connected")
-        # Automatically transition to GUIDED mode if not already in GUIDED
+        # Automatically transition to GUIDED if not already there. A silently
+        # rejected mode switch is the usual reason a goto "does nothing": the
+        # FC ignores position targets outside GUIDED, so surface the failure
+        # instead of sending into the void and reporting false success.
         if self.state["mode"] != "GUIDED":
-            self.set_mode("GUIDED")
+            res = self.set_mode("GUIDED")
+            if not res.get("accepted"):
+                raise ValueError(
+                    f"GOTO could not enter GUIDED mode "
+                    f"({res.get('result')}); target not sent")
+            # Confirm the transition via heartbeat before sending the target,
+            # so the setpoint doesn't arrive mid-switch and get dropped.
+            deadline = time.time() + 3
+            while self.state["mode"] != "GUIDED" and time.time() < deadline:
+                time.sleep(0.1)
         type_mask = 0b0000_1111_1111_1000
         time_boot_ms = int((time.time() - self._start_time) * 1000)
 
@@ -1344,6 +1356,7 @@ async def ws_telemetry(ws: WebSocket):
     # backfill recent events so a (re)connecting client sees context
     for evt in bridge.events_since(0)[-20:]:
         last_seq = evt["seq"]
+        await ws.send_json({"type": "event", **evt})
     try:
         while True:
             for evt in bridge.events_since(last_seq):
