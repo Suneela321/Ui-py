@@ -154,7 +154,7 @@
     </div>
     <div class="row">
       <button onclick="cmd('MODE MANUAL','/command/mode',{mode:'MANUAL'})">Manual</button>
-      <button onclick="cmd('MODE STABILIZE','/command/mode',{mode:'STABILIZE'})">Stabilize</button>
+      <button onclick="cmd('MODE AUTO','/command/mode',{mode:'AUTO'})">Auto</button>
       <button onclick="cmd('MODE CRUISE','/command/mode',{mode:'CRUISE'})">Cruise</button>
       <button onclick="cmd('MODE FBWA','/command/mode',{mode:'FBWA'})">FBWA</button>
       <button onclick="cmd('MODE FBWB','/command/mode',{mode:'FBWB'})">FBWB</button>
@@ -176,6 +176,13 @@
       <input id="gAlt" value="20" style="width:70px" aria-label="goto altitude">
       <button onclick="cmd('GOTO','/command/goto',{lat:+el('gLat').value,lon:+el('gLon').value,altitude:+el('gAlt').value})">Goto</button>
       <button onclick="fillHere()">Use current pos</button>
+    </div>
+    <div class="row" style="border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 8px;">
+      <button onclick="cmd('SET HOME CURRENT','/command/set_home',{use_current:true})">Set Home Current</button>
+      <input id="shLat" placeholder="home lat" style="width:100px">
+      <input id="shLon" placeholder="home lon" style="width:100px">
+      <input id="shAlt" value="0" style="width:60px" aria-label="home altitude">
+      <button onclick="cmd('SET HOME CUSTOM','/command/set_home',{use_current:false,lat:+el('shLat').value,lon:+el('shLon').value,alt:+el('shAlt').value})">Set Home Custom</button>
     </div>
   </section>
 

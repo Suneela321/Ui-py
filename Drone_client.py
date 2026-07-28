@@ -206,6 +206,10 @@ class DroneClient(QObject):
         """Continue the paused AUTO mission."""
         self._post("RESUME", "/command/resume")
 
+    def set_home(self, use_current: bool = True, lat: float = 0.0, lon: float = 0.0, alt: float = 0.0):
+        self._post("SET_HOME", "/command/set_home",
+                   {"use_current": use_current, "lat": lat, "lon": lon, "alt": alt})
+
     def transition(self, fixed_wing: bool):
         """VTOL transition: True -> forward flight, False -> hover."""
         self._post("TRANSITION", "/command/transition",

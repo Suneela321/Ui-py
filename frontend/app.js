@@ -148,6 +148,17 @@ bind('gotoBtn', () => command('/command/goto', {
   altitude: Number(gotoAltEl.value || 20),
 }, 'Goto'));
 
+bind('setHomeCurrentBtn', () => command('/command/set_home', {
+  use_current: true
+}, 'Set Home Current'));
+
+bind('setHomeCustomBtn', () => command('/command/set_home', {
+  use_current: false,
+  lat: Number(document.getElementById('homeLat').value),
+  lon: Number(document.getElementById('homeLon').value),
+  alt: Number(document.getElementById('homeAlt').value || 0)
+}, 'Set Home Custom'));
+
 // VTOL / QuadPlane flight modes. Each button carries its ArduPilot mode name
 // in data-mode; the backend resolves it via the FC's mode_mapping().
 const modeButtons = Array.from(document.querySelectorAll('button[data-mode]'));
@@ -352,6 +363,11 @@ function initPlanMap() {
   }
   planMap.on('click', (ev) => {
     if (!addPointMode) {
+      // In non-add-point mode, click on the map to pre-fill the GOTO inputs
+      gotoLatEl.value = ev.latlng.lat.toFixed(7);
+      gotoLonEl.value = ev.latlng.lng.toFixed(7);
+      // Auto switch to control screen so user can trigger GOTO easily
+      showScreen('control');
       return;
     }
     addWaypoint(ev.latlng.lat, ev.latlng.lng, 20);

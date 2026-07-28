@@ -40,7 +40,8 @@ class MainWindow(QMainWindow):
         row = QHBoxLayout()
         for text, fn in [("Connect", self._open_connect),
                          ("Arm", lambda: self.drone.arm(True)),
-                         ("Takeoff 20m", lambda: self.drone.takeoff(20))]:
+                         ("Takeoff 20m", lambda: self.drone.takeoff(20)),
+                         ("Set Home", lambda: self.drone.set_home(True))]:
             b = QPushButton(text); b.clicked.connect(fn); row.addWidget(b)
         v.addLayout(row)
 
@@ -48,8 +49,8 @@ class MainWindow(QMainWindow):
         mode_row.addWidget(QLabel("Set Mode:"))
         self.mode_combo = QComboBox()
         self.mode_combo.addItems([
-            "MANUAL", "STABILIZE", "CRUISE", "FBWA", "FBWB",
-            "QSTABILIZE", "QHOVER", "QLOITER", "QLAND", "QRTL", "GUIDED", "AUTO", "RTL"
+            "MANUAL", "AUTO", "CRUISE", "FBWA", "FBWB",
+            "QSTABILIZE", "QHOVER", "QLOITER", "QLAND", "QRTL", "GUIDED", "RTL"
         ])
         mode_row.addWidget(self.mode_combo)
         mode_btn = QPushButton("Apply")

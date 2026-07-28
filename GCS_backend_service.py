@@ -532,6 +532,18 @@ class Bridge:
         finally:
             self._unsubscribe(q)
 
+    def set_home(self, use_current: bool, lat: float = 0.0, lon: float = 0.0, alt: float = 0.0) -> dict:
+        """Set home position on the vehicle.
+        use_current=True sets the current vehicle location as home.
+        use_current=False sets the home to the specified lat, lon, alt."""
+        cmd = mavutil.mavlink.MAV_CMD_DO_SET_HOME
+        return self._send_verified(cmd, lambda:
+            self.master.mav.command_long_send(
+                self.master.target_system, self.master.target_component,
+                cmd, 0,
+                1 if use_current else 0,  # 1 = use current location, 0 = use specified lat/lon/alt
+                0, 0, 0, lat, lon, alt))
+
     def vtol_transition(self, to_fixed_wing: bool) -> dict:
         """Command a QuadPlane VTOL transition (MAV_CMD_DO_VTOL_TRANSITION).
         to_fixed_wing=True -> fixed-wing (forward flight);
@@ -550,10 +562,9 @@ class Bridge:
         the vehicle converging on target in the telemetry stream."""
         if not self.connected:
             raise ConnectionError("Not connected")
+        # Automatically transition to GUIDED mode if not already in GUIDED
         if self.state["mode"] != "GUIDED":
-            raise ValueError(
-                f"GOTO requires GUIDED mode (current: {self.state['mode']}). "
-                "Call /command/mode first.")
+            self.set_mode("GUIDED")
         type_mask = 0b0000_1111_1111_1000
         with self._lock:
             self.master.mav.set_position_target_global_int_send(
@@ -1147,6 +1158,21 @@ async def logs_get(name: str):
     if not path.exists():
         raise HTTPException(status_code=404, detail="Log not found")
     return FileResponse(path, media_type="text/csv", filename=name)
+
+
+class SetHomeBody(BaseModel):
+    use_current: bool = Field(default=True, description="True = set home to current vehicle location; False = use specific lat/lon/alt")
+    lat: float = Field(default=0.0, ge=-90, le=90)
+    lon: float = Field(default=0.0, ge=-180, le=180)
+    alt: float = Field(default=0.0, ge=-1000, le=10000)
+
+
+@app.post("/command/set_home")
+async def cmd_set_home(body: SetHomeBody):
+    try:
+        return await _run(bridge.set_home, body.use_current, body.lat, body.lon, body.alt)
+    except Exception as e:
+        raise _guard(e)
 
 
 class TransitionBody(BaseModel):

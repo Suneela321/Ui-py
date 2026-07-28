@@ -60,6 +60,24 @@
           <input id="gotoAlt" type="number" value="20" />
           <button id="gotoBtn">Goto</button>
         </div>
+        <div class="row homeControlRow" style="border-top: 1px dashed #2c3644; margin-top: 12px; padding-top: 12px;">
+          <label style="font-weight: bold; color: var(--text);">Home Controls</label>
+          <button id="setHomeCurrentBtn" style="padding: 6px 10px; font-size: 12px; margin-right: 8px;">Set Home Current</button>
+          <span style="font-size: 12px; color: #8b96a5;">or Custom:</span>
+        </div>
+        <div class="row">
+          <label>Home Lat</label>
+          <input id="homeLat" type="number" step="any" placeholder="e.g. 33.68" />
+        </div>
+        <div class="row">
+          <label>Home Lon</label>
+          <input id="homeLon" type="number" step="any" placeholder="e.g. 73.04" />
+        </div>
+        <div class="row">
+          <label>Home Alt</label>
+          <input id="homeAlt" type="number" value="0" />
+          <button id="setHomeCustomBtn">Set Home Custom</button>
+        </div>
       </section>
 
       <section class="card">
@@ -68,7 +86,7 @@
           <span class="modeLabel">Fixed-wing</span>
           <div class="actions modeGroup">
             <button data-mode="MANUAL">Manual</button>
-            <button data-mode="STABILIZE">Stabilize</button>
+            <button data-mode="AUTO">Auto</button>
             <button data-mode="CRUISE">Cruise</button>
             <button data-mode="FBWA">FBWA</button>
             <button data-mode="FBWB">FBWB</button>
