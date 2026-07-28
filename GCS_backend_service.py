@@ -567,9 +567,9 @@ class Bridge:
             self.set_mode("GUIDED")
         type_mask = 0b0000_1111_1111_1000
         with self._lock:
-            self.master.mav.set_position_target_global_int_send(
+            self.master.mav.set_position_target_global_int_message(
                 10, self.master.target_system, self.master.target_component,
-                mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+                mavutil.mavlink. MAV_FRAME_GLOBAL_RELATIVE_ALT,
                 type_mask,
                 int(lat * 1e7), int(lon * 1e7), alt_m,
                 0, 0, 0, 0, 0, 0, 0, 0)
