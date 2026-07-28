@@ -117,6 +117,7 @@ class Bridge:
         self._subs: dict = {}
         self._subs_lock = threading.Lock()
         self._supervising = False
+        self._start_time = time.time()
         self.state = {
             "lat": 0.0, "lon": 0.0, "alt_rel": 0.0,
             "mode": None, "armed": False,
@@ -566,13 +567,42 @@ class Bridge:
         if self.state["mode"] != "GUIDED":
             self.set_mode("GUIDED")
         type_mask = 0b0000_1111_1111_1000
+        time_boot_ms = int((time.time() - self._start_time) * 1000)
+
+        # Redundant send: We send both the SET_POSITION_TARGET_GLOBAL_INT (86) and
+        # MAV_CMD_DO_REPOSITION (192) inside a COMMAND_INT to ensure that the GOTO command
+        # works flawlessly on all versions of ArduPilot and ArduCopter firmware.
         with self._lock:
+<<<<<<< HEAD
             self.master.mav.set_position_target_global_int_message(
                 10, self.master.target_system, self.master.target_component,
                 mavutil.mavlink. MAV_FRAME_GLOBAL_RELATIVE_ALT,
+=======
+            # 1. SET_POSITION_TARGET_GLOBAL_INT (86)
+            self.master.mav.set_position_target_global_int_send(
+                time_boot_ms, self.master.target_system, self.master.target_component,
+                mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+>>>>>>> 718f62b97a4f7e10a8cadf82b23593355b3eced2
                 type_mask,
                 int(lat * 1e7), int(lon * 1e7), alt_m,
                 0, 0, 0, 0, 0, 0, 0, 0)
+
+            # 2. MAV_CMD_DO_REPOSITION (192) packaged inside a COMMAND_INT
+            try:
+                self.master.mav.command_int_send(
+                    self.master.target_system, self.master.target_component,
+                    mavutil.mavlink.MAV_FRAME_GLOBAL_RELATIVE_ALT_INT,
+                    mavutil.mavlink.MAV_CMD_DO_REPOSITION,
+                    0, 0,
+                    -1.0,  # param1: ground speed (default -1)
+                    0.0,   # param2: reposition flags
+                    0.0,   # param3: reserved
+                    float('nan'),  # param4: yaw (NaN unchanged)
+                    int(lat * 1e7), int(lon * 1e7), alt_m
+                )
+            except Exception as e:
+                print(f"[bridge] command_int DO_REPOSITION send failed: {e}")
+
         return {"result": "SENT",
                 "accepted": True,
                 "target": {"lat": lat, "lon": lon, "alt": alt_m},
