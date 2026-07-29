@@ -20,9 +20,11 @@ const clearLocalPlanBtn = document.getElementById('clearLocalPlanBtn');
 const loadMissionBtn = document.getElementById('loadMissionBtn');
 const uploadMissionBtn = document.getElementById('uploadMissionBtn');
 const clearMissionBtn = document.getElementById('clearMissionBtn');
+const uploadWaypointsBtn = document.getElementById('uploadWaypointsBtn');
 const readFileBtn = document.getElementById('readFileBtn');
 const writeFileBtn = document.getElementById('writeFileBtn');
 const missionFileInput = document.getElementById('missionFileInput');
+const uploadWaypointsInput = document.getElementById('uploadWaypointsInput');
 const waypointTableBody = document.getElementById('waypointTableBody');
 
 let planMap;
@@ -522,6 +524,31 @@ function serializeWaypointFile(points) {
   });
   return `QGC WPL 110\n${rows.join('\n')}\n`;
 }
+
+// "Upload Waypoints" imports a .waypoints mission file (QGC WPL 110) from the
+// operator's disk straight into the Plan view. It reuses parseWaypointFile and
+// keeps its own hidden <input> so it stays independent of "Read File".
+uploadWaypointsBtn.addEventListener('click', () => uploadWaypointsInput.click());
+
+uploadWaypointsInput.addEventListener('change', async () => {
+  const file = uploadWaypointsInput.files && uploadWaypointsInput.files[0];
+  if (!file) {
+    return;
+  }
+  try {
+    waypoints = parseWaypointFile(await file.text());
+    selectedWaypointIndex = 0;
+    renderPlan();
+    if (planMap && waypoints.length) {
+      planMap.fitBounds(waypoints.map((wp) => [wp.lat, wp.lon]), { padding: [40, 40] });
+    }
+    log('Waypoints uploaded from file', { file: file.name, count: waypoints.length });
+  } catch (e) {
+    log(`Upload waypoints failed: ${e.message}`);
+  } finally {
+    uploadWaypointsInput.value = '';
+  }
+});
 
 readFileBtn.addEventListener('click', () => missionFileInput.click());
 
